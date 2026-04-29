@@ -25,4 +25,11 @@ async def run_skills_concurrently(targets: List[str], title: str, markdown: str)
     async def run_one(skill):
         return await asyncio.to_thread(skill.run, title, markdown)
 
-    return await asyncio.gather(*(run_one(skill) for skill in skills), return_exceptions=False)
+    raw = await asyncio.gather(*(run_one(skill) for skill in skills), return_exceptions=True)
+    results = []
+    for skill, result in zip(skills, raw):
+        if isinstance(result, Exception):
+            results.append(f"{skill.name}：失敗 {type(result).__name__} - {result}")
+        else:
+            results.append(result)
+    return results

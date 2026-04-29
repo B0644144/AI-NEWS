@@ -2,8 +2,11 @@
 
 ## 新功能
 - `/digest --schedule 07:30`：每天固定時間自動執行摘要流程（UTC）。
-- Mail skill 支援 HTML 晨報模板（更像電子報）。
-- Notion skill 會自動偵測資料庫的 title 欄位（不再固定 `Name`）。
+- `/digest --unschedule`：取消目前 chat 的排程。
+- 排程持久化：Bot 重啟後會自動恢復已設定排程。
+- Mail skill 支援 HTML 晨報模板（更像電子報），並對內容做 HTML escape。
+- Notion skill 會自動偵測資料庫的 title 欄位（不再固定 `Name`），且新增重試機制。
+- 趨勢排序加入去重、來源權重、時效權重與關鍵字權重回饋。
 
 ## 指令
 - `/trends`
@@ -12,6 +15,7 @@
 - `/digest notion obsidian`
 - `/digest --schedule 07:30`
 - `/digest --schedule 07:30 mail`（排程只寄信）
+- `/digest --unschedule`
 
 ## Skills
 - `mail`：寄送純文字 + HTML 郵件
@@ -32,6 +36,9 @@
 
 ### Obsidian
 - `OBSIDIAN_VAULT_PATH`
+
+### 選填（資料持久化）
+- `BOT_DATA_DIR`（預設 `.bot_data`）
 
 ## 啟動
 ```bash

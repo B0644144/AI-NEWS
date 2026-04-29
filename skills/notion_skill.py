@@ -1,4 +1,5 @@
 import os
+import time
 from typing import Optional
 
 import requests
@@ -19,10 +20,30 @@ class NotionSkill(ExportSkill):
             "Content-Type": "application/json",
         }
 
+    def _request_with_retry(self, method: str, url: str, **kwargs):
+        retries = 3
+        backoffs = [1, 2, 4]
+        last_resp = None
+        for i in range(retries):
+            try:
+                resp = requests.request(method, url, timeout=20, **kwargs)
+                last_resp = resp
+                if resp.status_code == 429 or resp.status_code >= 500:
+                    if i < retries - 1:
+                        time.sleep(backoffs[i])
+                        continue
+                return resp
+            except requests.RequestException:
+                if i < retries - 1:
+                    time.sleep(backoffs[i])
+                    continue
+                raise
+        return last_resp
+
     def _detect_title_property(self) -> Optional[str]:
         db_id = os.environ["NOTION_DATABASE_ID"]
-        resp = requests.get(f"https://api.notion.com/v1/databases/{db_id}", headers=self._headers(), timeout=20)
-        if resp.status_code >= 300:
+        resp = self._request_with_retry("GET", f"https://api.notion.com/v1/databases/{db_id}", headers=self._headers())
+        if not resp or resp.status_code >= 300:
             return None
         props = resp.json().get("properties", {})
         for name, meta in props.items():
@@ -53,7 +74,15 @@ class NotionSkill(ExportSkill):
             "children": paragraphs[:100],
         }
 
-        resp = requests.post("https://api.notion.com/v1/pages", headers=self._headers(), json=payload, timeout=20)
+        resp = self._request_with_retry("POST", "https://api.notion.com/v1/pages", headers=self._headers(), json=payload)
+        if not resp:
+            return "Notion：匯出失敗 unknown-response"
         if resp.status_code >= 300:
-            return f"Notion：匯出失敗 {resp.status_code}"
+            msg = ""
+            try:
+                payload = resp.json()
+                msg = payload.get("message", "")
+            except ValueError:
+                msg = resp.text[:120]
+            return f"Notion：匯出失敗 {resp.status_code} {msg}".strip()
         return f"Notion：已建立頁面 {resp.json().get('url', '')}"
