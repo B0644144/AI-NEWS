@@ -1,55 +1,42 @@
-# AI 趨勢 Telegram Bot
+# AI 趨勢 Telegram Bot（MCP Skills + 排程）
 
-這是一個可以在 Telegram 上查詢「近期 AI 趨勢科技新聞」的機器人。
+## 新功能
+- `/digest --schedule 07:30`：每天固定時間自動執行摘要流程（UTC）。
+- Mail skill 支援 HTML 晨報模板（更像電子報）。
+- Notion skill 會自動偵測資料庫的 title 欄位（不再固定 `Name`）。
 
-## 功能
-- `/start`：啟動機器人並顯示歡迎訊息
-- `/trends`：抓取多個科技媒體 RSS，整理近 7 天 AI 相關趨勢新聞
-- `/help`：查看指令說明
+## 指令
+- `/trends`
+- `/digest`
+- `/digest mail`
+- `/digest notion obsidian`
+- `/digest --schedule 07:30`
+- `/digest --schedule 07:30 mail`（排程只寄信）
 
-## 資料來源
-目前預設抓取以下 RSS：
-- OpenAI Blog
-- MIT Technology Review（AI topic）
-- The Verge（AI）
-- VentureBeat（AI）
+## Skills
+- `mail`：寄送純文字 + HTML 郵件
+- `notion`：寫入 Notion database page（自動對應 title 欄位）
+- `obsidian`：輸出 markdown 到 vault
 
-> 可依需求在 `bot.py` 的 `FEEDS` 清單中新增或替換來源。
+## 環境變數
+### 必填
+- `TELEGRAM_BOT_TOKEN`
 
-## 安裝與執行
+### Mail
+- `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASSWORD`
+- `MAIL_FROM` / `MAIL_TO`
 
-### 1) 建立 Telegram Bot Token
-1. 在 Telegram 找 `@BotFather`
-2. 輸入 `/newbot` 建立機器人
-3. 取得 token（格式像 `123456:ABC-DEF...`）
+### Notion
+- `NOTION_TOKEN`
+- `NOTION_DATABASE_ID`
 
-### 2) 安裝依賴
+### Obsidian
+- `OBSIDIAN_VAULT_PATH`
+
+## 啟動
 ```bash
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-```
-
-### 3) 設定環境變數
-```bash
-export TELEGRAM_BOT_TOKEN="你的token"
-```
-
-### 4) 啟動
-```bash
 python bot.py
 ```
-
-## 設計說明
-- 機器人使用 long polling 模式執行。
-- `/trends` 會：
-  1. 抓取 RSS 內容
-  2. 過濾近 7 天
-  3. 以 AI 關鍵字計分
-  4. 依分數排序後回傳前 10 則
-
-## 可擴充方向
-- 加入更多新聞來源（如 Hugging Face、arXiv cs.AI）
-- 將資料快取到 Redis，降低重複抓取
-- 支援每日固定時間主動推播（JobQueue）
-- 改用 LLM 摘要每則新聞重點
