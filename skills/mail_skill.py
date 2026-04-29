@@ -1,3 +1,4 @@
+import html
 import os
 import smtplib
 from datetime import datetime, timezone
@@ -9,14 +10,15 @@ from .base import ExportSkill
 def build_html_newsletter(title: str, markdown: str) -> str:
     rows = []
     for line in markdown.splitlines():
-        if line.startswith("## "):
-            rows.append(f"<h2 style='color:#0f172a'>{line[3:]}</h2>")
-        elif line.startswith("- "):
-            rows.append(f"<p style='margin:4px 0;color:#334155'>{line[2:]}</p>")
-        elif line.startswith("# "):
-            rows.append(f"<h1 style='color:#111827'>{line[2:]}</h1>")
-        elif line.strip():
-            rows.append(f"<p style='margin:6px 0;color:#1f2937'>{line}</p>")
+        safe_line = html.escape(line)
+        if safe_line.startswith("## "):
+            rows.append(f"<h2 style='color:#0f172a'>{safe_line[3:]}</h2>")
+        elif safe_line.startswith("- "):
+            rows.append(f"<p style='margin:4px 0;color:#334155'>{safe_line[2:]}</p>")
+        elif safe_line.startswith("# "):
+            rows.append(f"<h1 style='color:#111827'>{safe_line[2:]}</h1>")
+        elif safe_line.strip():
+            rows.append(f"<p style='margin:6px 0;color:#1f2937'>{safe_line}</p>")
 
     generated = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     body = "\n".join(rows)
